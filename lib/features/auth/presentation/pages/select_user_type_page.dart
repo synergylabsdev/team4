@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'attendee_sign_up_page.dart';
+import 'organizer_sign_up_page.dart';
 
 /// Page where users select their account type (Attendee or Organizer).
 class SelectUserTypePage extends StatefulWidget {
@@ -113,12 +114,11 @@ class _SelectUserTypePageState extends State<SelectUserTypePage> {
                         ),
                       );
                     } else {
-                      // TODO: Navigate to organizer sign up page
-                      // Navigator.of(context).push(
-                      //   MaterialPageRoute(
-                      //     builder: (context) => const OrganizerSignUpPage(),
-                      //   ),
-                      // );
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const OrganizerSignUpPage(),
+                        ),
+                      );
                     }
                   }
                 },

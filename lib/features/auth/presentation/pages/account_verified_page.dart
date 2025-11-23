@@ -150,10 +150,6 @@ class _AccountVerifiedPageState extends State<AccountVerifiedPage> {
                       child: _buildContent(),
                     ),
                     const Spacer(),
-                    // Bottom indicator (home indicator for iOS)
-                    const SizedBox(height: 16),
-                    _buildBottomIndicator(),
-                    const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -177,7 +173,7 @@ class _AccountVerifiedPageState extends State<AccountVerifiedPage> {
               color: Color(0xFF0F1728),
               fontSize: 18,
               fontFamily: 'Futura PT',
-              fontWeight: FontWeight.w450,
+              fontWeight: FontWeight.w500,
               height: 1.56,
             ),
           ),
@@ -321,17 +317,5 @@ class _AccountVerifiedPageState extends State<AccountVerifiedPage> {
     );
   }
 
-  Widget _buildBottomIndicator() {
-    return Container(
-      width: 134,
-      height: 5,
-      decoration: ShapeDecoration(
-        color: Colors.black,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(100),
-        ),
-      ),
-    );
-  }
 }
 
