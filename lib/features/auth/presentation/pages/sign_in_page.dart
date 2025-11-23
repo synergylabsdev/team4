@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:leadright/di/injection_container.dart';
+import 'package:leadright/core/usecases/usecase.dart';
+import 'package:leadright/features/auth/domain/usecases/is_profile_complete.dart';
 import 'package:leadright/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:leadright/features/auth/presentation/pages/complete_profile_page.dart';
 import 'package:leadright/features/auth/presentation/pages/main_page.dart';
 import 'package:leadright/features/auth/presentation/pages/select_user_type_page.dart';
 
@@ -37,16 +41,47 @@ class _SignInPageState extends State<SignInPage> {
     );
 
     return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state is AuthAuthenticated) {
-          // Navigate to home page on successful sign in
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => BlocProvider.value(
-                value: context.read<AuthBloc>(),
-                child: const MainPage(),
-              ),
-            ),
+          // Check if profile is complete
+          final isProfileComplete = getIt<IsProfileComplete>();
+          final profileResult = await isProfileComplete(NoParams());
+          
+          profileResult.fold(
+            (failure) {
+              // If check fails, navigate to home page (default behavior)
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) => BlocProvider.value(
+                    value: context.read<AuthBloc>(),
+                    child: const MainPage(),
+                  ),
+                ),
+              );
+            },
+            (isComplete) {
+              if (isComplete) {
+                // Profile is complete, navigate to home page
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (context) => BlocProvider.value(
+                      value: context.read<AuthBloc>(),
+                      child: const MainPage(),
+                    ),
+                  ),
+                );
+              } else {
+                // Profile is incomplete, navigate to complete profile page
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (context) => BlocProvider.value(
+                      value: context.read<AuthBloc>(),
+                      child: const CompleteProfilePage(),
+                    ),
+                  ),
+                );
+              }
+            },
           );
         } else if (state is AuthError) {
           // Show error message

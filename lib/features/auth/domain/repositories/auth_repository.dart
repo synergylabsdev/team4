@@ -45,5 +45,14 @@ abstract class AuthRepository {
   Future<Either<Failure, User>> updateProfile({
     String? displayName,
     String? photoUrl,
+    String? firstName,
+    String? lastName,
+    String? phoneNumber,
+    String? city,
+    String? state,
+    String? zipCode,
   });
+
+  /// Check if user profile is complete.
+  Future<Either<Failure, bool>> isProfileComplete();
 }

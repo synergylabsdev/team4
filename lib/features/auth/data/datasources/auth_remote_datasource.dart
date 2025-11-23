@@ -28,6 +28,21 @@ abstract class AuthRemoteDataSource {
 
   /// Stream of authentication state changes.
   Stream<UserModel?> get authStateChanges;
+
+  /// Update user profile in Firestore.
+  Future<UserModel> updateProfile({
+    String? displayName,
+    String? photoUrl,
+    String? firstName,
+    String? lastName,
+    String? phoneNumber,
+    String? city,
+    String? state,
+    String? zipCode,
+  });
+
+  /// Check if user profile is complete.
+  Future<bool> isProfileComplete();
 }
 
 @LazySingleton(as: AuthRemoteDataSource)
@@ -188,6 +203,115 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         createdAt: firebaseUser.metadata.creationTime ?? now,
         updatedAt: null,
       );
+    }
+  }
+
+  @override
+  Future<UserModel> updateProfile({
+    String? displayName,
+    String? photoUrl,
+    String? firstName,
+    String? lastName,
+    String? phoneNumber,
+    String? city,
+    String? state,
+    String? zipCode,
+  }) async {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user == null) {
+        throw AuthException('No user is currently signed in');
+      }
+
+      // Update Firebase Auth display name if provided
+      if (displayName != null && displayName.isNotEmpty) {
+        await user.updateDisplayName(displayName);
+        await user.reload();
+      }
+
+      // Update Firestore document
+      final updateData = <String, dynamic>{
+        'updatedAt': Timestamp.fromDate(DateTime.now()),
+      };
+
+      if (displayName != null) {
+        updateData['displayName'] = displayName.isEmpty ? null : displayName;
+      }
+      if (photoUrl != null) {
+        updateData['photoUrl'] = photoUrl.isEmpty ? null : photoUrl;
+      }
+      if (firstName != null) {
+        updateData['firstName'] = firstName.isEmpty ? null : firstName.trim();
+      }
+      if (lastName != null) {
+        updateData['lastName'] = lastName.isEmpty ? null : lastName.trim();
+      }
+      if (phoneNumber != null) {
+        updateData['phoneNumber'] = phoneNumber.isEmpty ? null : phoneNumber.trim();
+      }
+      if (city != null) {
+        updateData['city'] = city.isEmpty ? null : city.trim();
+      }
+      if (state != null) {
+        updateData['state'] = state.isEmpty ? null : state.trim();
+      }
+      if (zipCode != null) {
+        updateData['zipCode'] = zipCode.isEmpty ? null : zipCode.trim();
+      }
+
+      await _firestore.collection('users').doc(user.uid).update(updateData);
+
+      // Reload user and return updated user
+      await user.reload();
+      return await _getUserFromFirebase(user);
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      throw AuthException(_getAuthErrorMessage(e));
+    } catch (e) {
+      throw AuthException('Profile update failed: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<bool> isProfileComplete() async {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user == null) {
+        return false;
+      }
+
+      final userDoc = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (!userDoc.exists) {
+        return false;
+      }
+
+      final data = userDoc.data()!;
+      
+      // Check if all required profile fields are present and non-empty
+      final firstName = data['firstName'] as String?;
+      final lastName = data['lastName'] as String?;
+      final phoneNumber = data['phoneNumber'] as String?;
+      final city = data['city'] as String?;
+      final state = data['state'] as String?;
+      final zipCode = data['zipCode'] as String?;
+
+      return firstName != null &&
+          firstName.isNotEmpty &&
+          lastName != null &&
+          lastName.isNotEmpty &&
+          phoneNumber != null &&
+          phoneNumber.isNotEmpty &&
+          city != null &&
+          city.isNotEmpty &&
+          state != null &&
+          state.isNotEmpty &&
+          zipCode != null &&
+          zipCode.isNotEmpty;
+    } catch (e) {
+      return false;
     }
   }
 

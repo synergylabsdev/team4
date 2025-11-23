@@ -96,6 +96,7 @@ class EventCard extends StatelessWidget {
             width: double.infinity,
             height: 192,
             clipBehavior: Clip.antiAlias,
+            decoration: const BoxDecoration(),
             child: Stack(
               children: [
                 CachedNetworkImage(

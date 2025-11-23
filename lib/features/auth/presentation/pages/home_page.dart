@@ -38,6 +38,9 @@ class _HomePageState extends State<HomePage> {
           title: event.title,
           snippet: event.location.address,
         ),
+        icon: BitmapDescriptor.defaultMarkerWithHue(
+          BitmapDescriptor.hueBlue,
+        ),
       );
     }).toSet();
   }
@@ -219,53 +222,86 @@ class _HomePageState extends State<HomePage> {
                             ],
                           ),
                           const SizedBox(height: 12),
-                          // Search Bar
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: ShapeDecoration(
-                              color: const Color(0xFFF6F6F6),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.search,
-                                  size: 16,
-                                  color: Color(0xFF667084),
-                                ),
-                                SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    'Search',
-                                    style: TextStyle(
-                                      color: Color(0xFF667084),
-                                      fontSize: 14,
-                                      fontFamily: 'Quicksand',
-                                      fontWeight: FontWeight.w400,
-                                      height: 1.43,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          // Filter Buttons
+                          // Search and Event Theme Row
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             mainAxisAlignment: MainAxisAlignment.start,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _FilterChip(label: 'Location'),
-                              const SizedBox(width: 4),
-                              _FilterChip(label: 'Event Theme'),
-                              const SizedBox(width: 4),
-                              _FilterChip(label: 'Sort By'),
+                              // Search Container
+                              SizedBox(
+                                width: 208,
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: ShapeDecoration(
+                                    color: const Color(0xFFF6F6F6),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.search,
+                                        size: 16,
+                                        color: Color(0xFF667084),
+                                      ),
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Search',
+                                          style: TextStyle(
+                                            color: Color(0xFF667084),
+                                            fontSize: 14,
+                                            fontFamily: 'Quicksand',
+                                            fontWeight: FontWeight.w400,
+                                            height: 1.43,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              // Event Theme Filter
+                              Expanded(
+                                child: Container(
+                                  height: 44,
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: ShapeDecoration(
+                                    color: const Color(0xFFF6F6F6),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        'Event Theme',
+                                        style: TextStyle(
+                                          color: Color(0xFF667084),
+                                          fontSize: 12,
+                                          fontFamily: 'Quicksand',
+                                          fontWeight: FontWeight.w500,
+                                          height: 1.50,
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.keyboard_arrow_down,
+                                        size: 16,
+                                        color: Color(0xFF667084),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ],
@@ -356,23 +392,83 @@ class _HomePageState extends State<HomePage> {
                                   .reduce((a, b) => a + b) /
                                   validEvents.length;
 
-                              return GoogleMap(
-                                onMapCreated: (controller) {
-                                  _onMapCreated(controller);
-                                  // Fit bounds after map is created
-                                  WidgetsBinding.instance
-                                      .addPostFrameCallback((_) {
-                                    _fitBounds(validEvents);
-                                  });
-                                },
-                                initialCameraPosition: CameraPosition(
-                                  target: LatLng(centerLat, centerLng),
-                                  zoom: 12,
+                              return Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 16,
+                                  top: 12,
+                                  right: 16,
+                                  bottom: 16,
                                 ),
-                                markers: _buildMarkers(validEvents),
-                                mapType: MapType.normal,
-                                myLocationButtonEnabled: false,
-                                zoomControlsEnabled: false,
+                                child: Container(
+                                  decoration: ShapeDecoration(
+                                    color: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(24),
+                                    ),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(24),
+                                    child: Stack(
+                                      children: [
+                                        GoogleMap(
+                                          onMapCreated: (controller) {
+                                            _onMapCreated(controller);
+                                            // Fit bounds after map is created
+                                            WidgetsBinding.instance
+                                                .addPostFrameCallback((_) {
+                                              _fitBounds(validEvents);
+                                            });
+                                          },
+                                          initialCameraPosition: CameraPosition(
+                                            target: LatLng(centerLat, centerLng),
+                                            zoom: 12,
+                                          ),
+                                          markers: _buildMarkers(validEvents),
+                                          mapType: MapType.normal,
+                                          myLocationButtonEnabled: false,
+                                          zoomControlsEnabled: false,
+                                        ),
+                                        // Floating action button for location
+                                        Positioned(
+                                          right: 14,
+                                          bottom: 14,
+                                          child: Container(
+                                            width: 48,
+                                            height: 48,
+                                            decoration: ShapeDecoration(
+                                              color: const Color(0xFF1E3A8A),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(50),
+                                              ),
+                                              shadows: const [
+                                                BoxShadow(
+                                                  color: Color(0x19000000),
+                                                  blurRadius: 4,
+                                                  offset: Offset(0, 2),
+                                                  spreadRadius: 0,
+                                                ),
+                                              ],
+                                            ),
+                                            child: IconButton(
+                                              icon: const Icon(
+                                                Icons.my_location,
+                                                color: Colors.white,
+                                                size: 20,
+                                              ),
+                                              onPressed: () {
+                                                // Fit bounds when location button is pressed
+                                                if (_mapController != null) {
+                                                  _fitBounds(validEvents);
+                                                }
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               );
                             }
 
@@ -446,7 +542,7 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-/// Filter chip widget for search filters.
+
 class _FilterChip extends StatelessWidget {
   final String label;
 

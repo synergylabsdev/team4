@@ -16,4 +16,7 @@ abstract class EventRepository {
 
   /// Get events by organization ID.
   Stream<Either<Failure, List<Event>>> getEventsByOrganization(String orgId);
+
+  /// Create a new event.
+  Future<Either<Failure, Event>> createEvent(Event event);
 }

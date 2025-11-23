@@ -15,6 +15,9 @@ abstract class EventRemoteDataSource {
 
   /// Get events by organization ID.
   Stream<List<EventModel>> getEventsByOrganization(String orgId);
+
+  /// Create a new event.
+  Future<EventModel> createEvent(EventModel event);
 }
 
 @LazySingleton(as: EventRemoteDataSource)
@@ -80,6 +83,25 @@ class EventRemoteDataSourceImpl implements EventRemoteDataSource {
     } catch (e) {
       throw ServerException(
           'Failed to fetch organization events: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<EventModel> createEvent(EventModel event) async {
+    try {
+      final eventJson = event.toJson();
+      // Remove id from JSON as Firestore will generate it
+      eventJson.remove('id');
+      
+      final docRef = await _firestore
+          .collection(AppConstants.eventsCollection)
+          .add(eventJson);
+
+      // Fetch the created document to return with the generated ID
+      final doc = await docRef.get();
+      return EventModel.fromFirestore(doc);
+    } catch (e) {
+      throw ServerException('Failed to create event: ${e.toString()}');
     }
   }
 }

@@ -7,6 +7,7 @@ import '../../domain/entities/user.dart';
 import '../../domain/usecases/sign_in_with_email.dart';
 import '../../domain/usecases/sign_out.dart';
 import '../../domain/usecases/sign_up.dart';
+import '../../domain/usecases/update_profile.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -16,15 +17,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignInWithEmail signInWithEmail;
   final SignUp signUp;
   final SignOut signOut;
+  final UpdateProfile updateProfile;
 
   AuthBloc({
     required this.signInWithEmail,
     required this.signUp,
     required this.signOut,
+    required this.updateProfile,
   }) : super(AuthInitial()) {
     on<SignInRequested>(_onSignInRequested);
     on<SignUpRequested>(_onSignUpRequested);
     on<SignOutRequested>(_onSignOutRequested);
+    on<UpdateProfileRequested>(_onUpdateProfileRequested);
   }
 
   Future<void> _onSignInRequested(
@@ -77,6 +81,29 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold(
       (failure) => emit(AuthError(failure.message)),
       (_) => emit(AuthUnauthenticated()),
+    );
+  }
+
+  Future<void> _onUpdateProfileRequested(
+    UpdateProfileRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await updateProfile(
+      UpdateProfileParams(
+        firstName: event.firstName,
+        lastName: event.lastName,
+        phoneNumber: event.phoneNumber,
+        city: event.city,
+        state: event.state,
+        zipCode: event.zipCode,
+      ),
+    );
+
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (user) => emit(AuthAuthenticated(user)),
     );
   }
 }

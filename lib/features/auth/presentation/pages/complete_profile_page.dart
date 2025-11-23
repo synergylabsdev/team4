@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:leadright/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:leadright/features/auth/presentation/pages/email_verification_page.dart';
+import 'package:leadright/features/auth/presentation/pages/main_page.dart';
 
 /// Page for completing user profile after sign up.
 class CompleteProfilePage extends StatefulWidget {
@@ -107,16 +107,17 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
 
   void _handleContinue() {
     if (_formKey.currentState?.validate() ?? false) {
-      // TODO: Implement profile completion logic
-      // Navigate to email verification page
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => BlocProvider.value(
-            value: context.read<AuthBloc>(),
-            child: const EmailVerificationPage(),
-          ),
-        ),
-      );
+      // Dispatch update profile event
+      context.read<AuthBloc>().add(
+            UpdateProfileRequested(
+              firstName: _firstNameController.text.trim(),
+              lastName: _lastNameController.text.trim(),
+              phoneNumber: _phoneNumberController.text.trim(),
+              city: _cityController.text.trim(),
+              state: _stateController.text.trim(),
+              zipCode: _zipCodeController.text.trim(),
+            ),
+          );
     }
   }
 
@@ -134,6 +135,16 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
               backgroundColor: Colors.red,
             ),
           );
+        } else if (state is AuthAuthenticated) {
+          // Profile updated successfully, navigate to home page
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => BlocProvider.value(
+                value: context.read<AuthBloc>(),
+                child: const MainPage(),
+              ),
+            ),
+          );
         }
       },
       child: Scaffold(
@@ -143,22 +154,17 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
             builder: (context, state) {
               final isLoading = state is AuthLoading;
 
-              return SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(context).size.height -
-                        MediaQuery.of(context).padding.top -
-                        MediaQuery.of(context).padding.bottom,
-                  ),
-                  child: IntrinsicHeight(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+              return Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                             // Header section
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -696,96 +702,81 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                                 ),
                               ],
                             ),
-                            // Continue button section
-                            Padding(
-                              padding: const EdgeInsets.only(top: 80, bottom: 16),
-                              child: Column(
-                                children: [
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: Material(
-                                      color: isLoading
-                                          ? const Color(0xFF1E3A8A).withValues(alpha: 0.6)
-                                          : const Color(0xFF1E3A8A),
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: InkWell(
-                                        onTap: isLoading ? null : _handleContinue,
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 20,
-                                            vertical: 12,
-                                          ),
-                                          decoration: ShapeDecoration(
-                                            color: isLoading
-                                                ? const Color(0xFF1E3A8A).withValues(alpha: 0.6)
-                                                : const Color(0xFF1E3A8A),
-                                            shape: RoundedRectangleBorder(
-                                              side: const BorderSide(
-                                                width: 1,
-                                                color: Color(0xFF1E3A8A),
-                                              ),
-                                              borderRadius: BorderRadius.circular(8),
-                                            ),
-                                            shadows: const [
-                                              BoxShadow(
-                                                color: Color(0x0C101828),
-                                                blurRadius: 2,
-                                                offset: Offset(0, 1),
-                                                spreadRadius: 0,
-                                              ),
-                                            ],
-                                          ),
-                                          child: Center(
-                                            child: isLoading
-                                                ? const SizedBox(
-                                                    width: 20,
-                                                    height: 20,
-                                                    child: CircularProgressIndicator(
-                                                      strokeWidth: 2,
-                                                      valueColor:
-                                                          AlwaysStoppedAnimation<Color>(
-                                                        Colors.white,
-                                                      ),
-                                                    ),
-                                                  )
-                                                : const Text(
-                                                    'Continue',
-                                                    style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 16,
-                                                      fontFamily: 'Inter',
-                                                      fontWeight: FontWeight.w600,
-                                                      height: 1.50,
-                                                    ),
-                                                  ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  // Bottom indicator (home indicator for iOS)
-                                  const SizedBox(height: 16),
-                                  Container(
-                                    width: 134,
-                                    height: 5,
-                                    margin: const EdgeInsets.only(bottom: 8),
-                                    decoration: ShapeDecoration(
-                                      color: Colors.black,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(100),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
+                  // Continue button section - fixed at bottom
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: isLoading ? null : _handleContinue,
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          decoration: ShapeDecoration(
+                            color: isLoading
+                                ? const Color(0xFF1E3A8A).withValues(alpha: 0.6)
+                                : const Color(0xFF1E3A8A),
+                            shape: RoundedRectangleBorder(
+                              side: const BorderSide(
+                                width: 1,
+                                color: Color(0xFF1E3A8A),
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            shadows: const [
+                              BoxShadow(
+                                color: Color(0x0C101828),
+                                blurRadius: 2,
+                                offset: Offset(0, 1),
+                                spreadRadius: 0,
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              isLoading
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                          Colors.white,
+                                        ),
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Continue',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontFamily: 'Inter',
+                                        fontWeight: FontWeight.w600,
+                                        height: 1.50,
+                                      ),
+                                    ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               );
             },
           ),

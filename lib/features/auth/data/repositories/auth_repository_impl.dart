@@ -130,9 +130,54 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, User>> updateProfile({
     String? displayName,
     String? photoUrl,
+    String? firstName,
+    String? lastName,
+    String? phoneNumber,
+    String? city,
+    String? state,
+    String? zipCode,
   }) async {
-    // TODO: Implement profile update
-    return const Left(AuthFailure('Profile update not implemented yet'));
+    if (await networkInfo.isConnected) {
+      try {
+        final userModel = await remoteDataSource.updateProfile(
+          displayName: displayName,
+          photoUrl: photoUrl,
+          firstName: firstName,
+          lastName: lastName,
+          phoneNumber: phoneNumber,
+          city: city,
+          state: state,
+          zipCode: zipCode,
+        );
+        return Right(userModel.toEntity());
+      } on AuthException catch (e) {
+        return Left(AuthFailure(e.message));
+      } on ServerException catch (e) {
+        return Left(ServerFailure(e.message));
+      } catch (e) {
+        return Left(ServerFailure('Unexpected error: ${e.toString()}'));
+      }
+    } else {
+      return const Left(NetworkFailure('No internet connection'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> isProfileComplete() async {
+    if (await networkInfo.isConnected) {
+      try {
+        final isComplete = await remoteDataSource.isProfileComplete();
+        return Right(isComplete);
+      } on AuthException catch (e) {
+        return Left(AuthFailure(e.message));
+      } on ServerException catch (e) {
+        return Left(ServerFailure(e.message));
+      } catch (e) {
+        return Left(ServerFailure('Unexpected error: ${e.toString()}'));
+      }
+    } else {
+      return const Left(NetworkFailure('No internet connection'));
+    }
   }
 }
 

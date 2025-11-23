@@ -39,3 +39,31 @@ class SignOutRequested extends AuthEvent {
   const SignOutRequested();
 }
 
+class UpdateProfileRequested extends AuthEvent {
+  final String? firstName;
+  final String? lastName;
+  final String? phoneNumber;
+  final String? city;
+  final String? state;
+  final String? zipCode;
+
+  const UpdateProfileRequested({
+    this.firstName,
+    this.lastName,
+    this.phoneNumber,
+    this.city,
+    this.state,
+    this.zipCode,
+  });
+
+  @override
+  List<Object?> get props => [
+        firstName,
+        lastName,
+        phoneNumber,
+        city,
+        state,
+        zipCode,
+      ];
+}
+

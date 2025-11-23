@@ -106,4 +106,23 @@ class EventRepositoryImpl implements EventRepository {
       ),
     );
   }
+
+  @override
+  Future<Either<Failure, Event>> createEvent(Event event) async {
+    try {
+      if (!await networkInfo.isConnected) {
+        return const Left(NetworkFailure('No internet connection'));
+      }
+
+      final eventModel = EventModel.fromEntity(event);
+      final createdEventModel = await remoteDataSource.createEvent(eventModel);
+      return Right(createdEventModel.toEntity());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } on NetworkException catch (e) {
+      return Left(NetworkFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Unexpected error: ${e.toString()}'));
+    }
+  }
 }

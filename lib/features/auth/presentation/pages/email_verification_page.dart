@@ -247,7 +247,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                 TextSpan(
                   children: [
                     const TextSpan(
-                      text: 'We've sent a verification link to ',
+                      text: 'We\'ve sent a verification link to ',
                       style: TextStyle(
                         color: Color(0xFF667084),
                         fontSize: 16,
