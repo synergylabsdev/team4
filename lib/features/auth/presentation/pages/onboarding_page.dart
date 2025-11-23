@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:leadright/features/auth/presentation/pages/select_user_type_page.dart';
 
 /// Onboarding page where users can choose to sign up or sign in.
 class OnboardingPage extends StatelessWidget {
@@ -93,8 +94,11 @@ class OnboardingPage extends StatelessWidget {
                       // Sign Up button
                       _SignUpButton(
                         onPressed: () {
-                          // TODO: Navigate to sign up page
-                          // Navigator.pushNamed(context, '/sign-up');
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const SelectUserTypePage(),
+                            ),
+                          );
                         },
                       ),
                       const SizedBox(height: 16),
