@@ -1,0 +1,42 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:get_it/get_it.dart';
+import 'package:injectable/injectable.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../core/network/network_info.dart';
+import 'injection_container.config.dart';
+
+final getIt = GetIt.instance;
+
+/// Initialize dependency injection.
+///
+/// This function should be called in main() before runApp().
+@InjectableInit()
+Future<void> configureDependencies() async {
+  // Register external dependencies
+  await _registerExternalDependencies();
+
+  // Initialize injectable
+  getIt.init();
+}
+
+/// Register external dependencies that cannot be annotated with @injectable.
+Future<void> _registerExternalDependencies() async {
+  // Firebase
+  getIt.registerLazySingleton(() => firebase_auth.FirebaseAuth.instance);
+  getIt.registerLazySingleton(() => FirebaseFirestore.instance);
+  getIt.registerLazySingleton(() => FirebaseStorage.instance);
+
+  // Connectivity
+  getIt.registerLazySingleton(() => Connectivity());
+  getIt.registerLazySingleton<NetworkInfo>(
+    () => NetworkInfoImpl(getIt<Connectivity>()),
+  );
+
+  // Shared Preferences
+  final sharedPreferences = await SharedPreferences.getInstance();
+  getIt.registerLazySingleton(() => sharedPreferences);
+}
