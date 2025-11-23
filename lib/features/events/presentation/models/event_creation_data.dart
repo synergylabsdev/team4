@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../../../../core/utils/constants.dart';
 import '../../domain/entities/event.dart';
 
 /// Data model for passing event creation data between pages.
@@ -59,7 +60,7 @@ class EventCreationData {
         ),
       ],
       imagePath: imagePath,
-      status: 'pending', // Events need admin approval
+      status: AppConstants.eventStatusPending, // Events need admin approval
       createdAt: now,
       updatedAt: null,
     );
