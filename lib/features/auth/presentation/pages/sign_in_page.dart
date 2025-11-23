@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:leadright/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:leadright/features/auth/presentation/pages/home_page.dart';
 import 'package:leadright/features/auth/presentation/pages/select_user_type_page.dart';
 
 /// Sign in page where users can log in with their email and password.
@@ -33,28 +36,51 @@ class _SignInPageState extends State<SignInPage> {
       ),
     );
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 24),
-                  // Header with back button and title
-                  _buildHeader(context),
-                  const SizedBox(height: 40),
-                  // Form fields
-                  _buildFormFields(),
-                  const SizedBox(height: 80),
-                  // Action buttons and footer
-                  _buildActions(context),
-                  const SizedBox(height: 32),
-                ],
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated) {
+          // Navigate to home page on successful sign in
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => BlocProvider.value(
+                value: context.read<AuthBloc>(),
+                child: const HomePage(),
               ),
             ),
+          );
+        } else if (state is AuthError) {
+          // Show error message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 24),
+                // Header with back button and title
+                _buildHeader(context),
+                const SizedBox(height: 40),
+                // Form fields
+                _buildFormFields(),
+                const SizedBox(height: 80),
+                // Action buttons and footer
+                _buildActions(context),
+                const SizedBox(height: 32),
+              ],
+            ),
           ),
+        ),
+      ),
     );
   }
 
@@ -315,100 +341,152 @@ class _SignInPageState extends State<SignInPage> {
   }
 
   Widget _buildActions(BuildContext context) {
-    return Column(
-      children: [
-        // Next button
-        SizedBox(
-          width: double.infinity,
-          child: Material(
-            color: const Color(0xFF1E3A8A),
-            borderRadius: BorderRadius.circular(8),
-            child: InkWell(
-              onTap: () {
-                // TODO: Implement sign in logic
-                // For now, just show a placeholder
-              },
-              borderRadius: BorderRadius.circular(8),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                decoration: ShapeDecoration(
-                  color: const Color(0xFF1E3A8A),
-                  shape: RoundedRectangleBorder(
-                    side: const BorderSide(
-                      width: 1,
-                      color: Color(0xFF1E3A8A),
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        final isLoading = state is AuthLoading;
+
+        return Column(
+          children: [
+            // Sign in button
+            SizedBox(
+              width: double.infinity,
+              child: Material(
+                color: const Color(0xFF1E3A8A),
+                borderRadius: BorderRadius.circular(8),
+                child: InkWell(
+                  onTap: isLoading
+                      ? null
+                      : () {
+                          // Validate inputs
+                          final email = _emailController.text.trim();
+                          final password = _passwordController.text;
+
+                          if (email.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please enter your email'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+
+                          if (password.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please enter your password'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+
+                          // Trigger sign in
+                          context.read<AuthBloc>().add(
+                                SignInRequested(
+                                  email: email,
+                                  password: password,
+                                ),
+                              );
+                        },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    decoration: ShapeDecoration(
+                      color: isLoading
+                          ? const Color(0xFF1E3A8A).withOpacity(0.6)
+                          : const Color(0xFF1E3A8A),
+                      shape: RoundedRectangleBorder(
+                        side: const BorderSide(
+                          width: 1,
+                          color: Color(0xFF1E3A8A),
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      shadows: const [
+                        BoxShadow(
+                          color: Color(0x0C101828),
+                          blurRadius: 2,
+                          offset: Offset(0, 1),
+                          spreadRadius: 0,
+                        ),
+                      ],
                     ),
-                    borderRadius: BorderRadius.circular(8),
+                    child: Center(
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                          : const Text(
+                              'Sign in',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w600,
+                                height: 1.50,
+                              ),
+                            ),
+                    ),
                   ),
-                  shadows: const [
-                    BoxShadow(
-                      color: Color(0x0C101828),
-                      blurRadius: 2,
-                      offset: Offset(0, 1),
-                      spreadRadius: 0,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Sign up link
+            TextButton(
+              onPressed: isLoading
+                  ? null
+                  : () {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => const SelectUserTypePage(),
+                        ),
+                      );
+                    },
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    const TextSpan(
+                      text: "Don't have an account?",
+                      style: TextStyle(
+                        color: Color(0xFF667084),
+                        fontSize: 14,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w500,
+                        height: 1.43,
+                      ),
+                    ),
+                    TextSpan(
+                      text: ' Sign Up',
+                      style: const TextStyle(
+                        color: Color(0xFF1E3A8A),
+                        fontSize: 14,
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w500,
+                        height: 1.43,
+                      ),
                     ),
                   ],
                 ),
-                child: const Center(
-                  child: Text(
-                    'Next',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w600,
-                      height: 1.50,
-                    ),
-                  ),
-                ),
+                textAlign: TextAlign.center,
               ),
             ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        // Sign up link
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (context) => const SelectUserTypePage(),
-              ),
-            );
-          },
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.zero,
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          child: Text.rich(
-            TextSpan(
-              children: [
-                const TextSpan(
-                  text: "Don't have an account?",
-                  style: TextStyle(
-                    color: Color(0xFF667084),
-                    fontSize: 14,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                    height: 1.43,
-                  ),
-                ),
-                TextSpan(
-                  text: ' Sign Up',
-                  style: const TextStyle(
-                    color: Color(0xFF1E3A8A),
-                    fontSize: 14,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                    height: 1.43,
-                  ),
-                ),
-              ],
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }
