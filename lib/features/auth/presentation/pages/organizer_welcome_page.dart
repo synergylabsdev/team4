@@ -27,15 +27,7 @@ class _OrganizerWelcomePageState extends State<OrganizerWelcomePage> {
 
   void _handleCreateFirstEvent() {
     // TODO: Navigate to create event page
-    // For now, navigate to main page
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => BlocProvider.value(
-          value: context.read<AuthBloc>(),
-          child: const MainPage(),
-        ),
-      ),
-    );
+    // For now, do nothing
   }
 
   @override

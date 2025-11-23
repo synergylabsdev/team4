@@ -10,6 +10,7 @@ class User extends Equatable {
   final String? photoUrl;
   final List<String> roles;
   final String? organizationId;
+  final String? stripeAccountId;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -20,6 +21,7 @@ class User extends Equatable {
     this.photoUrl,
     this.roles = const ['attendee'],
     this.organizationId,
+    this.stripeAccountId,
     required this.createdAt,
     this.updatedAt,
   });
@@ -47,6 +49,7 @@ class User extends Equatable {
         photoUrl,
         roles,
         organizationId,
+        stripeAccountId,
         createdAt,
         updatedAt,
       ];

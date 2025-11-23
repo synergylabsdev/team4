@@ -59,6 +59,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
     required String displayName,
+    String role = 'attendee',
   }) async {
     if (await networkInfo.isConnected) {
       try {
@@ -66,6 +67,7 @@ class AuthRepositoryImpl implements AuthRepository {
           email: email,
           password: password,
           displayName: displayName,
+          role: role,
         );
         return Right(userModel.toEntity());
       } on AuthException catch (e) {
@@ -136,6 +138,10 @@ class AuthRepositoryImpl implements AuthRepository {
     String? city,
     String? state,
     String? zipCode,
+    String? bio,
+    String? contactEmail,
+    String? website,
+    String? stripeAccountId,
   }) async {
     if (await networkInfo.isConnected) {
       try {
@@ -148,6 +154,10 @@ class AuthRepositoryImpl implements AuthRepository {
           city: city,
           state: state,
           zipCode: zipCode,
+          bio: bio,
+          contactEmail: contactEmail,
+          website: website,
+          stripeAccountId: stripeAccountId,
         );
         return Right(userModel.toEntity());
       } on AuthException catch (e) {

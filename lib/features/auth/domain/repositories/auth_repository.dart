@@ -25,6 +25,7 @@ abstract class AuthRepository {
     required String email,
     required String password,
     required String displayName,
+    String role = 'attendee',
   });
 
   /// Sign out the current user.
@@ -51,6 +52,10 @@ abstract class AuthRepository {
     String? city,
     String? state,
     String? zipCode,
+    String? bio,
+    String? contactEmail,
+    String? website,
+    String? stripeAccountId,
   });
 
   /// Check if user profile is complete.

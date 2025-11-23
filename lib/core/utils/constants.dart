@@ -58,6 +58,11 @@ class AppConstants {
   // QR Code
   static const String qrCodePrefix = 'TKT:';
 
+  // Stripe Configuration
+  static const String stripePublishableKey =
+      'pk_test_51RqG4uET4NAZpFjDiN1M0IeJ2oR2wt5HBnVJLXYfVCSzNwOzqHyWjZTASu1FoF4yAXFNmllkByIPbnoW6cm2JoKw00M8Vpat67';
+  // Note: Secret key should only be used server-side in Cloud Functions
+
   // Date Formats
   static const String dateFormat = 'MMM dd, yyyy';
   static const String timeFormat = 'hh:mm a';

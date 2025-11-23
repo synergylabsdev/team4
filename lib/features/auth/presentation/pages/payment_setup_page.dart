@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:leadright/di/injection_container.dart';
+import 'package:leadright/features/auth/data/datasources/stripe_remote_datasource.dart';
 import 'package:leadright/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:leadright/features/auth/presentation/pages/organizer_welcome_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// Page for setting up payment account (Stripe) for organizers.
 /// This is the second step (2/3) in the organizer account setup flow.
@@ -13,6 +16,9 @@ class PaymentSetupPage extends StatefulWidget {
 }
 
 class _PaymentSetupPageState extends State<PaymentSetupPage> {
+  final StripeRemoteDataSource _stripeDataSource = getIt<StripeRemoteDataSource>();
+  bool _isConnecting = false;
+
   void _handleSkipForNow() {
     // Navigate to welcome page
     Navigator.of(context).push(
@@ -25,17 +31,97 @@ class _PaymentSetupPageState extends State<PaymentSetupPage> {
     );
   }
 
-  void _handleConnectPayment() {
-    // TODO: Implement Stripe connection logic
-    // For now, navigate to welcome page
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => BlocProvider.value(
-          value: context.read<AuthBloc>(),
-          child: const OrganizerWelcomePage(),
-        ),
-      ),
-    );
+  Future<void> _handleConnectPayment() async {
+    if (_isConnecting) return;
+
+    setState(() {
+      _isConnecting = true;
+    });
+
+    try {
+      // Create Stripe Connect account and get onboarding URL
+      final onboardingUrl = await _stripeDataSource.createStripeConnectAccount();
+
+      // Open the onboarding URL
+      final uri = Uri.parse(onboardingUrl);
+      if (!await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      )) {
+        throw Exception('Could not launch $onboardingUrl');
+      }
+
+      // Wait a bit for the user to complete onboarding
+      // In a real implementation, you would:
+      // 1. Use a webview with a redirect handler
+      // 2. Listen for the redirect URL
+      // 3. Extract the account ID from the redirect
+      // For now, we'll poll for the account ID after a delay
+      await Future.delayed(const Duration(seconds: 2));
+
+      // Poll for the account ID (in production, use webhooks or redirect handling)
+      String? accountId;
+      for (int i = 0; i < 10; i++) {
+        accountId = await _stripeDataSource.getStripeAccountId();
+        if (accountId != null && accountId.isNotEmpty) {
+          break;
+        }
+        await Future.delayed(const Duration(seconds: 2));
+      }
+
+      if (accountId != null && accountId.isNotEmpty) {
+        // Save the Stripe account ID to Firebase
+        context.read<AuthBloc>().add(
+              ConnectStripeAccountRequested(
+                stripeAccountId: accountId,
+              ),
+            );
+
+        // Wait for the state to update
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        // Navigate to welcome page
+        if (mounted) {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => BlocProvider.value(
+                value: context.read<AuthBloc>(),
+                child: const OrganizerWelcomePage(),
+              ),
+            ),
+          );
+        }
+      } else {
+        // Show error if account ID not found
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Stripe account setup is still in progress. Please complete the onboarding process.',
+              ),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Failed to connect Stripe account: ${e.toString()}',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isConnecting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -563,10 +649,10 @@ class _PaymentSetupPageState extends State<PaymentSetupPage> {
                         child: Material(
                           color: Colors.transparent,
                           child: InkWell(
-                            onTap: isLoading ? null : _handleConnectPayment,
+                            onTap: (isLoading || _isConnecting) ? null : _handleConnectPayment,
                             borderRadius: BorderRadius.circular(8),
                             child: Center(
-                              child: isLoading
+                              child: (isLoading || _isConnecting)
                                   ? const SizedBox(
                                       width: 20,
                                       height: 20,

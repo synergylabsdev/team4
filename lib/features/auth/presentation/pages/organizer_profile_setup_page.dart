@@ -1,10 +1,15 @@
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:leadright/core/utils/constants.dart';
+import 'package:leadright/di/injection_container.dart';
 import 'package:leadright/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:leadright/features/auth/presentation/pages/payment_setup_page.dart';
+import 'package:uuid/uuid.dart';
 
 /// Page for completing organizer profile setup after sign up.
 class OrganizerProfileSetupPage extends StatefulWidget {
@@ -24,6 +29,7 @@ class _OrganizerProfileSetupPageState extends State<OrganizerProfileSetupPage> {
   final ImagePicker _imagePicker = ImagePicker();
   File? _profileImage;
   static const int _maxBioLength = 250;
+  bool _isSaving = false;
 
   @override
   void dispose() {
@@ -110,18 +116,66 @@ class _OrganizerProfileSetupPageState extends State<OrganizerProfileSetupPage> {
     return _maxBioLength - _bioController.text.length;
   }
 
-  void _handleSaveAndContinue() {
-    if (_formKey.currentState?.validate() ?? false) {
-      // TODO: Implement profile save logic
-      // Navigate to payment setup page (step 2/3)
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => BlocProvider.value(
-            value: context.read<AuthBloc>(),
-            child: const PaymentSetupPage(),
+  /// Upload profile image to Firebase Storage and return the download URL.
+  Future<String?> _uploadProfileImage(File imageFile) async {
+    try {
+      final firebaseAuth = firebase_auth.FirebaseAuth.instance;
+      final user = firebaseAuth.currentUser;
+      if (user == null) {
+        throw Exception('No user is currently signed in');
+      }
+
+      final storage = getIt<FirebaseStorage>();
+      final imageId = const Uuid().v4();
+      final imageExtension = imageFile.path.split('.').last;
+      final storagePath = '${AppConstants.userAvatarsPath}/${user.uid}/$imageId.$imageExtension';
+
+      final ref = storage.ref().child(storagePath);
+      await ref.putFile(imageFile);
+      final downloadUrl = await ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to upload image: ${e.toString()}'),
+            backgroundColor: Colors.red,
           ),
-        ),
-      );
+        );
+      }
+      return null;
+    }
+  }
+
+  Future<void> _handleSaveAndContinue() async {
+    if (_formKey.currentState?.validate() ?? false && !_isSaving) {
+      setState(() {
+        _isSaving = true;
+      });
+
+      String? photoUrl;
+
+      // Upload profile image if selected
+      if (_profileImage != null) {
+        photoUrl = await _uploadProfileImage(_profileImage!);
+        if (photoUrl == null) {
+          // Image upload failed, but don't block the flow
+          // User can continue without image
+        }
+      }
+
+      // Dispatch update profile event
+      context.read<AuthBloc>().add(
+            UpdateProfileRequested(
+              displayName: _fullNameController.text.trim(),
+              photoUrl: photoUrl,
+              bio: _bioController.text.trim(),
+              contactEmail: _contactEmailController.text.trim(),
+              website: _websiteController.text.trim().isEmpty
+                  ? null
+                  : _websiteController.text.trim(),
+            ),
+          );
     }
   }
 
@@ -133,12 +187,30 @@ class _OrganizerProfileSetupPageState extends State<OrganizerProfileSetupPage> {
           // Navigate back to sign in page when logged out
           Navigator.of(context).popUntil((route) => route.isFirst);
         } else if (state is AuthError) {
+          setState(() {
+            _isSaving = false;
+          });
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
               backgroundColor: Colors.red,
             ),
           );
+        } else if (state is AuthAuthenticated && _isSaving) {
+          // Profile update successful, navigate to payment setup page
+          setState(() {
+            _isSaving = false;
+          });
+          if (mounted) {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => BlocProvider.value(
+                  value: context.read<AuthBloc>(),
+                  child: const PaymentSetupPage(),
+                ),
+              ),
+            );
+          }
         }
       },
       child: Scaffold(

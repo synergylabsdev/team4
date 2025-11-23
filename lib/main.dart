@@ -1,6 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:leadright/core/utils/constants.dart';
 import 'package:leadright/di/injection_container.dart';
 import 'package:leadright/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:leadright/features/auth/presentation/pages/onboarding_page.dart';
@@ -14,6 +16,10 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  // Initialize Stripe
+  Stripe.publishableKey = AppConstants.stripePublishableKey;
+  Stripe.merchantIdentifier = 'merchant.com.leadright';
   
   // Initialize dependency injection
   await configureDependencies();

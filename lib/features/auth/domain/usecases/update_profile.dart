@@ -25,6 +25,10 @@ class UpdateProfile implements UseCase<User, UpdateProfileParams> {
       city: params.city,
       state: params.state,
       zipCode: params.zipCode,
+      bio: params.bio,
+      contactEmail: params.contactEmail,
+      website: params.website,
+      stripeAccountId: params.stripeAccountId,
     );
   }
 }
@@ -39,6 +43,10 @@ class UpdateProfileParams extends Equatable {
   final String? city;
   final String? state;
   final String? zipCode;
+  final String? bio;
+  final String? contactEmail;
+  final String? website;
+  final String? stripeAccountId;
 
   const UpdateProfileParams({
     this.displayName,
@@ -49,6 +57,10 @@ class UpdateProfileParams extends Equatable {
     this.city,
     this.state,
     this.zipCode,
+    this.bio,
+    this.contactEmail,
+    this.website,
+    this.stripeAccountId,
   });
 
   @override
@@ -61,6 +73,10 @@ class UpdateProfileParams extends Equatable {
         city,
         state,
         zipCode,
+        bio,
+        contactEmail,
+        website,
+        stripeAccountId,
       ];
 }
 

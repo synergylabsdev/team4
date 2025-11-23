@@ -639,12 +639,13 @@ class _OrganizerSignUpPageState extends State<OrganizerSignUpPage> {
                                       // Use organization name as display name
                                       final displayName = organizationName;
 
-                                      // Trigger sign up
+                                      // Trigger sign up with organizer role
                                       context.read<AuthBloc>().add(
                                             SignUpRequested(
                                               email: email,
                                               password: password,
                                               displayName: displayName,
+                                              role: 'organizer',
                                             ),
                                           );
                                     }

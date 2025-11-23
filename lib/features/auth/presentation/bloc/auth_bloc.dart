@@ -29,6 +29,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SignUpRequested>(_onSignUpRequested);
     on<SignOutRequested>(_onSignOutRequested);
     on<UpdateProfileRequested>(_onUpdateProfileRequested);
+    on<ConnectStripeAccountRequested>(_onConnectStripeAccountRequested);
   }
 
   Future<void> _onSignInRequested(
@@ -61,6 +62,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         email: event.email,
         password: event.password,
         displayName: event.displayName,
+        role: event.role,
       ),
     );
 
@@ -92,12 +94,36 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     final result = await updateProfile(
       UpdateProfileParams(
+        displayName: event.displayName,
+        photoUrl: event.photoUrl,
         firstName: event.firstName,
         lastName: event.lastName,
         phoneNumber: event.phoneNumber,
         city: event.city,
         state: event.state,
         zipCode: event.zipCode,
+        bio: event.bio,
+        contactEmail: event.contactEmail,
+        website: event.website,
+        stripeAccountId: null,
+      ),
+    );
+
+    result.fold(
+      (failure) => emit(AuthError(failure.message)),
+      (user) => emit(AuthAuthenticated(user)),
+    );
+  }
+
+  Future<void> _onConnectStripeAccountRequested(
+    ConnectStripeAccountRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+
+    final result = await updateProfile(
+      UpdateProfileParams(
+        stripeAccountId: event.stripeAccountId,
       ),
     );
 

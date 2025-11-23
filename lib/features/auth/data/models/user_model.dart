@@ -17,6 +17,7 @@ class UserModel {
   final String? photoUrl;
   final List<String> roles;
   final String? organizationId;
+  final String? stripeAccountId;
 
   @JsonKey(fromJson: _timestampFromJson, toJson: _timestampToJson)
   final DateTime createdAt;
@@ -32,6 +33,7 @@ class UserModel {
     this.photoUrl,
     this.roles = const ['attendee'],
     this.organizationId,
+    this.stripeAccountId,
     required this.createdAt,
     this.updatedAt,
   });
@@ -52,6 +54,7 @@ class UserModel {
       photoUrl: user.photoUrl,
       roles: user.roles,
       organizationId: user.organizationId,
+      stripeAccountId: user.stripeAccountId,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     );
@@ -66,6 +69,7 @@ class UserModel {
       photoUrl: photoUrl,
       roles: roles,
       organizationId: organizationId,
+      stripeAccountId: stripeAccountId,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );

@@ -18,6 +18,7 @@ abstract class AuthRemoteDataSource {
     required String email,
     required String password,
     required String displayName,
+    String role = 'attendee',
   });
 
   /// Sign out the current user.
@@ -39,6 +40,10 @@ abstract class AuthRemoteDataSource {
     String? city,
     String? state,
     String? zipCode,
+    String? bio,
+    String? contactEmail,
+    String? website,
+    String? stripeAccountId,
   });
 
   /// Check if user profile is complete.
@@ -83,6 +88,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String email,
     required String password,
     required String displayName,
+    String role = 'attendee',
   }) async {
     try {
       final credential = await _firebaseAuth.createUserWithEmailAndPassword(
@@ -107,7 +113,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         'email': email,
         'displayName': displayName.isNotEmpty ? displayName : null,
         'photoUrl': null,
-        'roles': const ['attendee'],
+        'roles': [role],
         'organizationId': null,
         'createdAt': Timestamp.fromDate(now),
         'updatedAt': null,
@@ -171,6 +177,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           photoUrl: data['photoUrl'] ?? firebaseUser.photoURL,
           roles: List<String>.from(data['roles'] ?? ['attendee']),
           organizationId: data['organizationId'],
+          stripeAccountId: data['stripeAccountId'],
           createdAt: (data['createdAt'] as Timestamp?)?.toDate() ??
               firebaseUser.metadata.creationTime ??
               DateTime.now(),
@@ -186,6 +193,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           photoUrl: firebaseUser.photoURL,
           roles: const ['attendee'],
           organizationId: null,
+          stripeAccountId: null,
           createdAt: firebaseUser.metadata.creationTime ?? now,
           updatedAt: null,
         );
@@ -200,6 +208,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         photoUrl: firebaseUser.photoURL,
         roles: const ['attendee'],
         organizationId: null,
+        stripeAccountId: null,
         createdAt: firebaseUser.metadata.creationTime ?? now,
         updatedAt: null,
       );
@@ -216,6 +225,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     String? city,
     String? state,
     String? zipCode,
+    String? bio,
+    String? contactEmail,
+    String? website,
+    String? stripeAccountId,
   }) async {
     try {
       final user = _firebaseAuth.currentUser;
@@ -257,6 +270,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
       if (zipCode != null) {
         updateData['zipCode'] = zipCode.isEmpty ? null : zipCode.trim();
+      }
+      if (bio != null) {
+        updateData['bio'] = bio.isEmpty ? null : bio.trim();
+      }
+      if (contactEmail != null) {
+        updateData['contactEmail'] = contactEmail.isEmpty ? null : contactEmail.trim();
+      }
+      if (website != null) {
+        updateData['website'] = website.isEmpty ? null : website.trim();
+      }
+      if (stripeAccountId != null) {
+        updateData['stripeAccountId'] = stripeAccountId.isEmpty ? null : stripeAccountId.trim();
       }
 
       await _firestore.collection('users').doc(user.uid).update(updateData);
