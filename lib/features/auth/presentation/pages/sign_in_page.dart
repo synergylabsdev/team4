@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:leadright/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:leadright/features/auth/presentation/pages/home_page.dart';
+import 'package:leadright/features/auth/presentation/pages/main_page.dart';
 import 'package:leadright/features/auth/presentation/pages/select_user_type_page.dart';
 
 /// Sign in page where users can log in with their email and password.
@@ -44,7 +44,7 @@ class _SignInPageState extends State<SignInPage> {
             MaterialPageRoute(
               builder: (context) => BlocProvider.value(
                 value: context.read<AuthBloc>(),
-                child: const HomePage(),
+                child: const MainPage(),
               ),
             ),
           );

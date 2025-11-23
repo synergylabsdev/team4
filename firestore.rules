@@ -1,0 +1,15 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read access to events collection for authenticated users
+    match /events/{eventId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only allow writes through backend/admin
+    }
+    
+    // Add more rules as needed
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
