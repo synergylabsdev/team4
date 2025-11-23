@@ -148,10 +148,6 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                           child: _buildContent(context, userEmail),
                         ),
                         const Spacer(),
-                        // Bottom indicator (home indicator for iOS)
-                        const SizedBox(height: 16),
-                        _buildBottomIndicator(),
-                        const SizedBox(height: 16),
                       ],
                     ),
                   ),
@@ -247,7 +243,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
                 TextSpan(
                   children: [
                     const TextSpan(
-                      text: 'We've sent a verification link to ',
+                      text: "We've sent a verification link to ",
                       style: TextStyle(
                         color: Color(0xFF667084),
                         fontSize: 16,
@@ -375,17 +371,5 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     );
   }
 
-  Widget _buildBottomIndicator() {
-    return Container(
-      width: 134,
-      height: 5,
-      decoration: ShapeDecoration(
-        color: Colors.black,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(100),
-        ),
-      ),
-    );
-  }
 }
 

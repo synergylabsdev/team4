@@ -764,19 +764,6 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                                       ),
                                     ),
                                   ),
-                                  // Bottom indicator (home indicator for iOS)
-                                  const SizedBox(height: 16),
-                                  Container(
-                                    width: 134,
-                                    height: 5,
-                                    margin: const EdgeInsets.only(bottom: 8),
-                                    decoration: ShapeDecoration(
-                                      color: Colors.black,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(100),
-                                      ),
-                                    ),
-                                  ),
                                 ],
                               ),
                             ),
