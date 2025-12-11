@@ -19,7 +19,6 @@ jobs:
       - name: Get changed files
         id: diff
         run: |
-          # produce a space-separated list of modified file paths between the previous commit and this commit
           git fetch origin ${{ github.event.before }} --no-tags --depth=1 || true
           files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | tr '\n' ' ')
           echo "files=$files" >> $GITHUB_OUTPUT
@@ -28,10 +27,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y gh
-
-      - name: GitHub CLI auth
-        run: |
-          unset GITHUB_TOKEN
 
       - name: Install Cursor CLI
         run: |
@@ -48,9 +43,7 @@ jobs:
             echo "review_output=No changed files" >> $GITHUB_OUTPUT
             exit 0
           fi
-          # handle long lists safely by writing to file
           printf "%s\n" $f > changed_files.txt
-          # run cursor on the file list (adjust cursor command if your version uses different args)
           cursor review $(cat changed_files.txt | tr '\n' ' ') > review_output.txt || true
           echo "review_output<<EOF" >> $GITHUB_OUTPUT
           cat review_output.txt >> $GITHUB_OUTPUT
@@ -58,6 +51,8 @@ jobs:
 
       - name: Create issue with review
         if: steps.diff.outputs.files != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           body="$(cat review_output.txt)"
           if [ -z "$body" ]; then
