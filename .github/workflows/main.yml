@@ -45,7 +45,7 @@ jobs:
           exit 0
           fi
           printf "%s\n" $f > changed_files.txt
-          $HOME/.local/bin/cursor-agent review $(cat changed_files.txt | tr '\n' ' ') > review_output.txt || true
+          $HOME/.local/bin/cursor-agent review $(cat changed_files.txt | tr '\n' 'review them and give some examples of for optimal solutions ') > review_output.txt || true
       - name: Create issue with review
         if: steps.diff.outputs.files != ''
         env:
