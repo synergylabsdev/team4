@@ -30,8 +30,7 @@ jobs:
 
       - name: Install Cursor CLI
         run: |
-          curl -fsSL https://cursor.sh/install-cli.sh | bash
-          echo "$HOME/.cursor/bin" >> $GITHUB_PATH
+          curl -fsSL https://cursor.sh/install-cli.sh | bash -s -- -d /usr/local/bin
 
       - name: Run Cursor on changed files only
         env:
