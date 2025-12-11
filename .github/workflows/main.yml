@@ -1,0 +1,70 @@
+name: cursor-diff-review
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: diff
+        run: |
+          # produce a space-separated list of modified file paths between the previous commit and this commit
+          git fetch origin ${{ github.event.before }} --no-tags --depth=1 || true
+          files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | tr '\n' ' ')
+          echo "files=$files" >> $GITHUB_OUTPUT
+
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: GitHub CLI auth
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "${GITHUB_TOKEN}" | gh auth login --with-token
+
+      - name: Install Cursor CLI
+        run: |
+          curl -fsSL https://cursor.sh/install-cli.sh | bash
+          echo "$HOME/.cursor/bin" >> $GITHUB_PATH
+
+      - name: Run Cursor on changed files only
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+        run: |
+          f="${{ steps.diff.outputs.files }}"
+          if [ -z "$f" ]; then
+            echo "No changed files to review."
+            echo "review_output=No changed files" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          # handle long lists safely by writing to file
+          printf "%s\n" $f > changed_files.txt
+          # run cursor on the file list (adjust cursor command if your version uses different args)
+          cursor review $(cat changed_files.txt | tr '\n' ' ') > review_output.txt || true
+          echo "review_output<<EOF" >> $GITHUB_OUTPUT
+          cat review_output.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create issue with review
+        if: steps.diff.outputs.files != ''
+        run: |
+          body="$(cat review_output.txt)"
+          if [ -z "$body" ]; then
+            body="Cursor produced no output."
+          fi
+          gh issue create \
+            --title "Automated Cursor Review: ${{ github.sha }}" \
+            --body "$body"
